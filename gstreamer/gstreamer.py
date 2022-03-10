@@ -249,13 +249,15 @@ def run_pipeline(user_function,
     # else:
         scale = min(appsink_size[0] / src_size[0], appsink_size[1] / src_size[1])
         scale = tuple(int(x * scale) for x in src_size)
-        scale_caps = 'video/x-h264,stream-format=byte-stream,alignment=nal ,width={width},height={height}'.format(width=scale[0], height=scale[1])
+        scale_caps = 'x264enc ! video/x-h264, stream-format=byte-stream ! rtph264pay' 
+        #  ,width={width},height={height}'.format(width=scale[0], height=scale[1])
         PIPELINE += """ ! tee name=t
             t. ! {leaky_q} ! videoconvert ! videoscale ! {scale_caps} ! videobox name=box autocrop=true
                ! {sink_caps} ! {sink_element}
             t. ! {leaky_q} ! videoconvert
-               ! rsvgoverlay name=overlay ! videoconvert ! rndbuffersize max=65000 ! udpsink host=127.0.0.1 port=5700
+               ! rsvgoverlay name=overlay ! videoconvert ! jpegenc ! udpsink  port=5200
             """
+            # host=127.0.0.1
     if objectOfTracker:
         mot_tracker = objectOfTracker.trackerObject.mot_tracker
     else:
