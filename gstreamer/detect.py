@@ -156,7 +156,7 @@ def main():
     parser.add_argument('--threshold', type=float, default=0.1,
                         help='classifier score threshold')
     parser.add_argument('--videosrc', help='Which video source to use. ',
-                        default='/dev/video0')
+                        default='/dev/video1')
     parser.add_argument('--videofmt', help='Input video format.',
                         default='raw',
                         choices=['raw', 'h264', 'jpeg'])
