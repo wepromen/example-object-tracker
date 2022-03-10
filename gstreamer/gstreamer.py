@@ -15,7 +15,6 @@
 import sys
 import svgwrite
 import threading
-from tracker import ObjectTracker
 
 import gi
 gi.require_version('Gst', '1.0')
@@ -27,7 +26,7 @@ GObject.threads_init()
 Gst.init(None)
 
 class GstPipeline:
-    def __init__(self, pipeline, user_function, src_size, mot_tracker):
+    def __init__(self, pipeline, user_function, src_size):
         self.user_function = user_function
         self.running = False
         self.gstbuffer = None
@@ -35,10 +34,10 @@ class GstPipeline:
         self.src_size = src_size
         self.box = None
         self.condition = threading.Condition()
-        self.mot_tracker = mot_tracker
+
         self.pipeline = Gst.parse_launch(pipeline)
         self.overlay = self.pipeline.get_by_name('overlay')
-        # self.overlaysink = self.pipeline.get_by_name('overlaysink')
+        self.overlaysink = self.pipeline.get_by_name('overlaysink')
         appsink = self.pipeline.get_by_name('appsink')
         appsink.connect('new-sample', self.on_new_sample)
 
@@ -48,7 +47,7 @@ class GstPipeline:
         bus.connect('message', self.on_bus_message)
 
         # Set up a full screen window on Coral, no-op otherwise.
-        # self.setup_window()
+        self.setup_window()
 
     def run(self):
         # Start inference worker.
@@ -128,7 +127,7 @@ class GstPipeline:
             # This requires a recent version of the python3-edgetpu package. If this
             # raises an exception please make sure dependencies are up to date.
             input_tensor = gstbuffer
-            svg = self.user_function(input_tensor, self.src_size, self.get_box(), self.mot_tracker)
+            svg = self.user_function(input_tensor, self.src_size, self.get_box())
             if svg:
                 if self.overlay:
                     self.overlay.set_property('data', svg)
@@ -205,40 +204,15 @@ def detectCoralDevBoard():
 def run_pipeline(user_function,
                  src_size,
                  appsink_size,
-                 trackerName,
                  videosrc='/dev/video1',
                  videofmt='raw'):
-    objectOfTracker = None
     if videofmt == 'h264':
         SRC_CAPS = 'video/x-h264,width={width},height={height},framerate=30/1'
     elif videofmt == 'jpeg':
         SRC_CAPS = 'image/jpeg,width={width},height={height},framerate=30/1'
     else:
         SRC_CAPS = 'video/x-raw,width={width},height={height},framerate=30/1'
-    if videosrc.startswith('/dev/video'):
-        PIPELINE = 'v4l2src device=%s ! {src_caps}'%videosrc
-    elif videosrc.startswith('http'):
-        PIPELINE = 'souphttpsrc location=%s'%videosrc
-    elif videosrc.startswith('rtsp'):
-        PIPELINE = 'rtspsrc location=%s'%videosrc
-    else:
-        demux =  'avidemux' if videosrc.endswith('avi') else 'qtdemux'
-        PIPELINE = """filesrc location=%s ! %s name=demux  demux.video_0
-                    ! queue ! decodebin  ! videorate
-                    ! videoconvert n-threads=4 ! videoscale n-threads=4
-                    ! {src_caps} ! {leaky_q} """ % (videosrc, demux)
-    ''' Check for the object tracker.'''
-    if trackerName != None:
-        if trackerName == 'mediapipe':
-            if detectCoralDevBoard():
-                objectOfTracker = ObjectTracker('mediapipe')
-            else:
-                print("Tracker MediaPipe is only available on the Dev Board. Keeping the tracker as None")
-                trackerName = None
-        else:
-            objectOfTracker = ObjectTracker(trackerName)
-    else:
-        pass
+    PIPELINE = 'v4l2src device=%s ! {src_caps}'%videosrc
 
     if detectCoralDevBoard():
         scale_caps = None
@@ -254,15 +228,12 @@ def run_pipeline(user_function,
             t. ! {leaky_q} ! videoconvert ! videoscale ! {scale_caps} ! videobox name=box autocrop=true
                ! {sink_caps} ! {sink_element}
             t. ! {leaky_q} ! videoconvert
-               ! rsvgoverlay name=overlay ! videoconvert ! ximagesink sync=false
+               ! rsvgoverlay name=overlay ! videoconvert ! jpegenc ! tcpclientsink host=127.0.0.1 port=9001
             """
-    if objectOfTracker:
-        mot_tracker = objectOfTracker.trackerObject.mot_tracker
-    else:
-        mot_tracker = None
+
     SINK_ELEMENT = 'appsink name=appsink emit-signals=true max-buffers=1 drop=true'
     SINK_CAPS = 'video/x-raw,format=RGB,width={width},height={height}'
-    LEAKY_Q = 'queue max-size-buffers=1 leaky=downstream'
+    LEAKY_Q = 'queue'
 
     src_caps = SRC_CAPS.format(width=src_size[0], height=src_size[1])
     sink_caps = SINK_CAPS.format(width=appsink_size[0], height=appsink_size[1])
@@ -272,5 +243,5 @@ def run_pipeline(user_function,
 
     print('Gstreamer pipeline:\n', pipeline)
 
-    pipeline = GstPipeline(pipeline, user_function, src_size, mot_tracker)
+    pipeline = GstPipeline(pipeline, user_function, src_size)
     pipeline.run()
