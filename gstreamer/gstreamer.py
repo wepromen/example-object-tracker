@@ -48,7 +48,7 @@ class GstPipeline:
         bus.connect('message', self.on_bus_message)
 
         # Set up a full screen window on Coral, no-op otherwise.
-        self.setup_window()
+        # self.setup_window()
 
     def run(self):
         # Start inference worker.
@@ -247,9 +247,9 @@ def run_pipeline(user_function,
     #         t. ! queue ! glsvgoverlaysink name=overlaysink
     #     """
     # else:
-        # scale = min(appsink_size[0] / src_size[0], appsink_size[1] / src_size[1])
-        # scale = tuple(int(x * scale) for x in src_size)
-        # scale_caps = 'video/x-raw,width={width},height={height}'.format(width=scale[0], height=scale[1])
+        scale = min(appsink_size[0] / src_size[0], appsink_size[1] / src_size[1])
+        scale = tuple(int(x * scale) for x in src_size)
+        scale_caps = 'video/x-raw,width={width},height={height}'.format(width=scale[0], height=scale[1])
         # PIPELINE += """ ! tee name=t
         #     t. ! {leaky_q} ! videoconvert ! videoscale ! {scale_caps} ! videobox name=box autocrop=true
         #        ! {sink_caps} ! {sink_element}
