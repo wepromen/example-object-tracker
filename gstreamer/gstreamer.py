@@ -254,7 +254,7 @@ def run_pipeline(user_function,
             t. ! {leaky_q} ! videoconvert ! videoscale ! {scale_caps} ! videobox name=box autocrop=true
                ! {sink_caps} ! {sink_element}
             t. ! {leaky_q} ! videoconvert
-               ! rsvgoverlay name=overlay ! videoconvert ! jpegenc ! tcpclientsink host=127.0.0.1 port=9001
+               ! rsvgoverlay name=overlay ! videoconvert ! jpegenc ! tcpclientsink host=192.168.100.2 port=9001
             """
     if objectOfTracker:
         mot_tracker = objectOfTracker.trackerObject.mot_tracker
