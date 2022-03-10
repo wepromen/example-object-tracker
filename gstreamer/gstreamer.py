@@ -38,7 +38,7 @@ class GstPipeline:
         self.mot_tracker = mot_tracker
         self.pipeline = Gst.parse_launch(pipeline)
         self.overlay = self.pipeline.get_by_name('overlay')
-        self.overlaysink = self.pipeline.get_by_name('overlaysink')
+        # self.overlaysink = self.pipeline.get_by_name('overlaysink')
         appsink = self.pipeline.get_by_name('appsink')
         appsink.connect('new-sample', self.on_new_sample)
 
