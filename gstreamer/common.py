@@ -22,7 +22,7 @@ import svgwrite
 import tflite_runtime.interpreter as tflite
 import time
 
-EDGETPU_SHARED_LIB = 'libedgetpu.so.1.0'
+EDGETPU_SHARED_LIB = 'libedgetpu.so.1'
 
 def make_interpreter(model_file):
     model_file, *device = model_file.split('@')
