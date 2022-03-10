@@ -254,7 +254,7 @@ def run_pipeline(user_function,
             t. ! {leaky_q} ! videoconvert ! videoscale ! {scale_caps} ! videobox name=box autocrop=true
                ! {sink_caps} ! {sink_element}
             t. ! {leaky_q} ! videoconvert
-               ! rsvgoverlay name=overlay ! videoconvert ! jpegenc !  omxh264enc ! rtph264pay ! rndbuffersize min=50000 max=60000 ! udpsink host=127.0.0.1 port=5700
+               ! rsvgoverlay name=overlay ! videoconvert ! jpegenc ! rtph264pay ! rndbuffersize min=50000 max=60000 ! udpsink host=127.0.0.1 port=5700
             """
             #ximagesink sync=false
     if objectOfTracker:
