@@ -250,12 +250,16 @@ def run_pipeline(user_function,
         scale = min(appsink_size[0] / src_size[0], appsink_size[1] / src_size[1])
         scale = tuple(int(x * scale) for x in src_size)
         scale_caps = 'video/x-raw,width={width},height={height}'.format(width=scale[0], height=scale[1])
-        PIPELINE += """ ! tee name=t
-            t. ! {leaky_q} ! videoconvert ! videoscale ! {scale_caps} ! videobox name=box autocrop=true
-               ! {sink_caps} ! {sink_element}
-            t. ! {leaky_q} ! videoconvert
-               ! rsvgoverlay name=overlay ! videoconvert ! jpegenc ! tcpclientsink host=127.0.0.1 port=9001
+        PIPELINE += """ videoconvert ! clockoverlay ! \
+        x264enc tune=zerolatency ! mpegtsmux ! \
+        hlssink playlist-root=http://127.0.0.1:8080 location=segments/segment_%05d.ts target-duration=5 max-files=5
             """
+        # PIPELINE += """ ! tee name=t
+        #     t. ! {leaky_q} ! videoconvert ! videoscale ! {scale_caps} ! videobox name=box autocrop=true
+        #        ! {sink_caps} ! {sink_element}
+        #     t. ! {leaky_q} ! videoconvert
+        #        ! rsvgoverlay name=overlay ! videoconvert ! jpegenc ! tcpclientsink host=127.0.0.1 port=9001
+        #     """
     if objectOfTracker:
         mot_tracker = objectOfTracker.trackerObject.mot_tracker
     else:
