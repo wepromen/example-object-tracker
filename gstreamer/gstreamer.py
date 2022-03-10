@@ -250,7 +250,7 @@ def run_pipeline(user_function,
         scale = min(appsink_size[0] / src_size[0], appsink_size[1] / src_size[1])
         scale = tuple(int(x * scale) for x in src_size)
         scale_caps = 'video/x-raw,width={width},height={height}'.format(width=scale[0], height=scale[1])
-        PIPELINE += """ videoconvert ! clockoverlay ! \
+        PIPELINE += """ ! videoconvert ! clockoverlay ! \
         x264enc tune=zerolatency ! mpegtsmux ! \
         hlssink playlist-root=http://127.0.0.1:8080 location=segments/segment_%05d.ts target-duration=5 max-files=5
             """
