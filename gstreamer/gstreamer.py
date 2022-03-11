@@ -241,12 +241,12 @@ def run_pipeline(user_function,
         pass
 
     if detectCoralDevBoard():
-    #     scale_caps = None
-    #     PIPELINE += """ ! decodebin ! glupload ! tee name=t
-    #         t. ! queue ! glfilterbin filter=glbox name=glbox ! {sink_caps} ! {sink_element}
-    #         t. ! queue ! glsvgoverlaysink name=overlaysink
-    #     """
-    # else:
+        scale_caps = None
+        PIPELINE += """ ! decodebin ! glupload ! tee name=t
+            t. ! queue ! glfilterbin filter=glbox name=glbox ! {sink_caps} ! {sink_element}
+            t. ! queue ! glsvgoverlaysink name=overlaysink
+        """
+    else:
         scale = min(appsink_size[0] / src_size[0], appsink_size[1] / src_size[1])
         scale = tuple(int(x * scale) for x in src_size)
         scale_caps = 'video/x-raw,width={width},height={height}'.format(width=scale[0], height=scale[1])
