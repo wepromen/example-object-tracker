@@ -158,7 +158,7 @@ def main():
     parser.add_argument('--videosrc', help='Which video source to use. ',
                         default='/dev/video1')
     parser.add_argument('--videofmt', help='Input video format.',
-                        default='raw',
+                        default='h264',
                         choices=['raw', 'h264', 'jpeg'])
     parser.add_argument('--tracker', help='Name of the Object Tracker To be used.',
                         default=None,
