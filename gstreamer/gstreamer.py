@@ -30,25 +30,25 @@ class GstPipeline:
     def __init__(self, pipeline, user_function, src_size, mot_tracker):
         self.user_function = user_function
         self.running = False
-        self.gstbuffer = None
-        self.sink_size = None
+        # self.gstbuffer = None
+        # self.sink_size = None
         self.src_size = src_size
         self.box = None
         self.condition = threading.Condition()
         self.mot_tracker = mot_tracker
-        self.pipeline = Gst.parse_launch(pipeline)
-        self.overlay = self.pipeline.get_by_name('overlay')
-        self.overlaysink = self.pipeline.get_by_name('overlaysink')
-        appsink = self.pipeline.get_by_name('appsink')
-        appsink.connect('new-sample', self.on_new_sample)
+        # self.pipeline = Gst.parse_launch(pipeline)
+        # self.overlay = self.pipeline.get_by_name('overlay')
+        # self.overlaysink = self.pipeline.get_by_name('overlaysink')
+        # appsink = self.pipeline.get_by_name('appsink')
+        # appsink.connect('new-sample', self.on_new_sample)
 
         # Set up a pipeline bus watch to catch errors.
-        bus = self.pipeline.get_bus()
-        bus.add_signal_watch()
-        bus.connect('message', self.on_bus_message)
+        # bus = self.pipeline.get_bus()
+        # bus.add_signal_watch()
+        # bus.connect('message', self.on_bus_message)
 
         # Set up a full screen window on Coral, no-op otherwise.
-        self.setup_window()
+        # self.setup_window()
 
     def run(self):
         # Start inference worker.
@@ -57,43 +57,43 @@ class GstPipeline:
         worker.start()
 
         # Run pipeline.
-        self.pipeline.set_state(Gst.State.PLAYING)
-        try:
-            Gtk.main()
-        except:
-            pass
+        # self.pipeline.set_state(Gst.State.PLAYING)
+        # try:
+        #     Gtk.main()
+        # except:
+        #     pass
 
         # Clean up.
-        self.pipeline.set_state(Gst.State.NULL)
-        while GLib.MainContext.default().iteration(False):
-            pass
-        with self.condition:
-            self.running = False
-            self.condition.notify_all()
+        # self.pipeline.set_state(Gst.State.NULL)
+        # while GLib.MainContext.default().iteration(False):
+        #     pass
+        # with self.condition:
+        #     self.running = False
+        #     self.condition.notify_all()
         worker.join()
 
-    def on_bus_message(self, bus, message):
-        t = message.type
-        if t == Gst.MessageType.EOS:
-            Gtk.main_quit()
-        elif t == Gst.MessageType.WARNING:
-            err, debug = message.parse_warning()
-            sys.stderr.write('Warning: %s: %s\n' % (err, debug))
-        elif t == Gst.MessageType.ERROR:
-            err, debug = message.parse_error()
-            sys.stderr.write('Error: %s: %s\n' % (err, debug))
-            Gtk.main_quit()
-        return True
+    # def on_bus_message(self, bus, message):
+    #     t = message.type
+    #     if t == Gst.MessageType.EOS:
+    #         Gtk.main_quit()
+    #     elif t == Gst.MessageType.WARNING:
+    #         err, debug = message.parse_warning()
+    #         sys.stderr.write('Warning: %s: %s\n' % (err, debug))
+    #     elif t == Gst.MessageType.ERROR:
+    #         err, debug = message.parse_error()
+    #         sys.stderr.write('Error: %s: %s\n' % (err, debug))
+    #         Gtk.main_quit()
+    #     return True
 
-    def on_new_sample(self, sink):
-        sample = sink.emit('pull-sample')
-        if not self.sink_size:
-            s = sample.get_caps().get_structure(0)
-            self.sink_size = (s.get_value('width'), s.get_value('height'))
-        with self.condition:
-            self.gstbuffer = sample.get_buffer()
-            self.condition.notify_all()
-        return Gst.FlowReturn.OK
+    # def on_new_sample(self, sink):
+    #     sample = sink.emit('pull-sample')
+    #     if not self.sink_size:
+    #         s = sample.get_caps().get_structure(0)
+    #         self.sink_size = (s.get_value('width'), s.get_value('height'))
+    #     with self.condition:
+    #         self.gstbuffer = sample.get_buffer()
+    #         self.condition.notify_all()
+    #     return Gst.FlowReturn.OK
 
     def get_box(self):
         if not self.box:
@@ -135,64 +135,64 @@ class GstPipeline:
                 if self.overlaysink:
                     self.overlaysink.set_property('svg', svg)
 
-    def setup_window(self):
-        # Only set up our own window if we have Coral overlay sink in the pipeline.
-        if not self.overlaysink:
-            return
+    # def setup_window(self):
+    #     # Only set up our own window if we have Coral overlay sink in the pipeline.
+    #     if not self.overlaysink:
+    #         return
 
-        gi.require_version('GstGL', '1.0')
-        gi.require_version('GstVideo', '1.0')
-        from gi.repository import GstGL, GstVideo
+    #     gi.require_version('GstGL', '1.0')
+    #     gi.require_version('GstVideo', '1.0')
+    #     from gi.repository import GstGL, GstVideo
 
-        # Needed to commit the wayland sub-surface.
-        def on_gl_draw(sink, widget):
-            widget.queue_draw()
+    #     # Needed to commit the wayland sub-surface.
+    #     def on_gl_draw(sink, widget):
+    #         widget.queue_draw()
 
-        # Needed to account for window chrome etc.
-        def on_widget_configure(widget, event, overlaysink):
-            allocation = widget.get_allocation()
-            overlaysink.set_render_rectangle(allocation.x, allocation.y,
-                    allocation.width, allocation.height)
-            return False
+    #     # Needed to account for window chrome etc.
+    #     def on_widget_configure(widget, event, overlaysink):
+    #         allocation = widget.get_allocation()
+    #         overlaysink.set_render_rectangle(allocation.x, allocation.y,
+    #                 allocation.width, allocation.height)
+    #         return False
 
-        window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
-        window.fullscreen()
+    #     window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
+    #     window.fullscreen()
 
-        drawing_area = Gtk.DrawingArea()
-        window.add(drawing_area)
-        drawing_area.realize()
+    #     drawing_area = Gtk.DrawingArea()
+    #     window.add(drawing_area)
+    #     drawing_area.realize()
 
-        self.overlaysink.connect('drawn', on_gl_draw, drawing_area)
+    #     self.overlaysink.connect('drawn', on_gl_draw, drawing_area)
 
-        # Wayland window handle.
-        wl_handle = self.overlaysink.get_wayland_window_handle(drawing_area)
-        self.overlaysink.set_window_handle(wl_handle)
+    #     # Wayland window handle.
+    #     wl_handle = self.overlaysink.get_wayland_window_handle(drawing_area)
+    #     self.overlaysink.set_window_handle(wl_handle)
 
-        # Wayland display context wrapped as a GStreamer context.
-        wl_display = self.overlaysink.get_default_wayland_display_context()
-        self.overlaysink.set_context(wl_display)
+    #     # Wayland display context wrapped as a GStreamer context.
+    #     wl_display = self.overlaysink.get_default_wayland_display_context()
+    #     self.overlaysink.set_context(wl_display)
 
-        drawing_area.connect('configure-event', on_widget_configure, self.overlaysink)
-        window.connect('delete-event', Gtk.main_quit)
-        window.show_all()
+    #     drawing_area.connect('configure-event', on_widget_configure, self.overlaysink)
+    #     window.connect('delete-event', Gtk.main_quit)
+    #     window.show_all()
 
-        # The appsink pipeline branch must use the same GL display as the screen
-        # rendering so they get the same GL context. This isn't automatically handled
-        # by GStreamer as we're the ones setting an external display handle.
-        def on_bus_message_sync(bus, message, overlaysink):
-            if message.type == Gst.MessageType.NEED_CONTEXT:
-                _, context_type = message.parse_context_type()
-                if context_type == GstGL.GL_DISPLAY_CONTEXT_TYPE:
-                    sinkelement = overlaysink.get_by_interface(GstVideo.VideoOverlay)
-                    gl_context = sinkelement.get_property('context')
-                    if gl_context:
-                        display_context = Gst.Context.new(GstGL.GL_DISPLAY_CONTEXT_TYPE, True)
-                        GstGL.context_set_gl_display(display_context, gl_context.get_display())
-                        message.src.set_context(display_context)
-            return Gst.BusSyncReply.PASS
+    #     # The appsink pipeline branch must use the same GL display as the screen
+    #     # rendering so they get the same GL context. This isn't automatically handled
+    #     # by GStreamer as we're the ones setting an external display handle.
+    #     def on_bus_message_sync(bus, message, overlaysink):
+    #         if message.type == Gst.MessageType.NEED_CONTEXT:
+    #             _, context_type = message.parse_context_type()
+    #             if context_type == GstGL.GL_DISPLAY_CONTEXT_TYPE:
+    #                 sinkelement = overlaysink.get_by_interface(GstVideo.VideoOverlay)
+    #                 gl_context = sinkelement.get_property('context')
+    #                 if gl_context:
+    #                     display_context = Gst.Context.new(GstGL.GL_DISPLAY_CONTEXT_TYPE, True)
+    #                     GstGL.context_set_gl_display(display_context, gl_context.get_display())
+    #                     message.src.set_context(display_context)
+    #         return Gst.BusSyncReply.PASS
 
-        bus = self.pipeline.get_bus()
-        bus.set_sync_handler(on_bus_message_sync, self.overlaysink)
+    #     bus = self.pipeline.get_bus()
+    #     bus.set_sync_handler(on_bus_message_sync, self.overlaysink)
 
 def detectCoralDevBoard():
   try:
@@ -244,8 +244,8 @@ def run_pipeline(user_function,
         scale_caps = None
         PIPELINE += """ ! decodebin ! glupload ! tee name=t
             t. ! queue ! glfilterbin filter=glbox name=glbox ! {sink_caps} ! {sink_element}
+            t. ! queue ! glsvgoverlaysink name=overlaysink
         """
-            # t. ! queue ! glsvgoverlaysink name=overlaysink
     else:
         scale = min(appsink_size[0] / src_size[0], appsink_size[1] / src_size[1])
         scale = tuple(int(x * scale) for x in src_size)
