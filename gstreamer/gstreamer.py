@@ -39,7 +39,8 @@ class GstPipeline:
         # self.pipeline = Gst.parse_launch(pipeline)
         # self.overlay = self.pipeline.get_by_name('overlay')
         # self.overlaysink = self.pipeline.get_by_name('overlaysink')
-        appsink = self.pipeline.get_by_name('appsink')
+        appsink = 'name=appsink emit-signals=true max-buffers=1 drop=true'
+        # appsink = self.pipeline.get_by_name('appsink')
         appsink.connect('new-sample', self.on_new_sample)
 
         # Set up a pipeline bus watch to catch errors.
