@@ -72,18 +72,18 @@ class GstPipeline:
             self.condition.notify_all()
         worker.join()
 
-    # def on_bus_message(self, bus, message):
-    #     t = message.type
-    #     if t == Gst.MessageType.EOS:
-    #         Gtk.main_quit()
-    #     elif t == Gst.MessageType.WARNING:
-    #         err, debug = message.parse_warning()
-    #         sys.stderr.write('Warning: %s: %s\n' % (err, debug))
-    #     elif t == Gst.MessageType.ERROR:
-    #         err, debug = message.parse_error()
-    #         sys.stderr.write('Error: %s: %s\n' % (err, debug))
-    #         Gtk.main_quit()
-    #     return True
+    def on_bus_message(self, bus, message):
+        t = message.type
+        if t == Gst.MessageType.EOS:
+            Gtk.main_quit()
+        elif t == Gst.MessageType.WARNING:
+            err, debug = message.parse_warning()
+            sys.stderr.write('Warning: %s: %s\n' % (err, debug))
+        elif t == Gst.MessageType.ERROR:
+            err, debug = message.parse_error()
+            sys.stderr.write('Error: %s: %s\n' % (err, debug))
+            Gtk.main_quit()
+        return True
 
     def on_new_sample(self, sink):
         sample = sink.emit('pull-sample')
