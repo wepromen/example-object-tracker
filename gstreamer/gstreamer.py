@@ -36,17 +36,16 @@ class GstPipeline:
         self.box = None
         self.condition = threading.Condition()
         self.mot_tracker = mot_tracker
-        # self.pipeline = Gst.parse_launch(pipeline)
+        self.pipeline = Gst.parse_launch(pipeline)
         # self.overlay = self.pipeline.get_by_name('overlay')
         # self.overlaysink = self.pipeline.get_by_name('overlaysink')
-        appsink = 'name=appsink emit-signals=true max-buffers=1 drop=true'
-        # appsink = self.pipeline.get_by_name('appsink')
+        appsink = self.pipeline.get_by_name('appsink')
         appsink.connect('new-sample', self.on_new_sample)
 
         # Set up a pipeline bus watch to catch errors.
-        # bus = self.pipeline.get_bus()
-        # bus.add_signal_watch()
-        # bus.connect('message', self.on_bus_message)
+        bus = self.pipeline.get_bus()
+        bus.add_signal_watch()
+        bus.connect('message', self.on_bus_message)
 
         # Set up a full screen window on Coral, no-op otherwise.
         # self.setup_window()
@@ -58,19 +57,19 @@ class GstPipeline:
         worker.start()
 
         # Run pipeline.
-        # self.pipeline.set_state(Gst.State.PLAYING)
+        self.pipeline.set_state(Gst.State.PLAYING)
         # try:
         #     Gtk.main()
         # except:
         #     pass
 
         # Clean up.
-        # self.pipeline.set_state(Gst.State.NULL)
-        # while GLib.MainContext.default().iteration(False):
-        #     pass
-        # with self.condition:
-        #     self.running = False
-        #     self.condition.notify_all()
+        self.pipeline.set_state(Gst.State.NULL)
+        while GLib.MainContext.default().iteration(False):
+            pass
+        with self.condition:
+            self.running = False
+            self.condition.notify_all()
         worker.join()
 
     # def on_bus_message(self, bus, message):
