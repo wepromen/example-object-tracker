@@ -254,7 +254,7 @@ def run_pipeline(user_function,
             t. ! {leaky_q} ! videoconvert ! videoscale ! {scale_caps} ! videobox name=box autocrop=true
                ! {sink_caps} ! {sink_element}
             t. ! {leaky_q} ! videoconvert
-               ! rsvgoverlay name=overlay ! videoconvert 
+               ! rsvgoverlay name=overlay ! videoconvert
             """
             # ! ximagesink sync=false
     if objectOfTracker:
