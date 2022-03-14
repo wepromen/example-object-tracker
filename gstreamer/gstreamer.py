@@ -244,7 +244,7 @@ def run_pipeline(user_function,
         scale_caps = None
         PIPELINE += """ ! decodebin ! glupload ! tee name=t
             t. ! queue ! glfilterbin filter=glbox name=glbox ! {sink_caps} ! {sink_element}
-            t. ! queue ! glsvgoverlaysink
+            t. ! queue ! glsvgoverlaysink name=overlay
         """
     else:
         scale = min(appsink_size[0] / src_size[0], appsink_size[1] / src_size[1])
