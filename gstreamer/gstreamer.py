@@ -30,7 +30,7 @@ class GstPipeline:
     def __init__(self, pipeline, user_function, src_size, mot_tracker):
         self.user_function = user_function
         self.running = False
-        # self.gstbuffer = None
+        self.gstbuffer = None
         # self.sink_size = None
         self.src_size = src_size
         self.box = None
@@ -39,8 +39,8 @@ class GstPipeline:
         # self.pipeline = Gst.parse_launch(pipeline)
         # self.overlay = self.pipeline.get_by_name('overlay')
         # self.overlaysink = self.pipeline.get_by_name('overlaysink')
-        # appsink = self.pipeline.get_by_name('appsink')
-        # appsink.connect('new-sample', self.on_new_sample)
+        appsink = self.pipeline.get_by_name('appsink')
+        appsink.connect('new-sample', self.on_new_sample)
 
         # Set up a pipeline bus watch to catch errors.
         # bus = self.pipeline.get_bus()
@@ -85,15 +85,15 @@ class GstPipeline:
     #         Gtk.main_quit()
     #     return True
 
-    # def on_new_sample(self, sink):
-    #     sample = sink.emit('pull-sample')
-    #     if not self.sink_size:
-    #         s = sample.get_caps().get_structure(0)
-    #         self.sink_size = (s.get_value('width'), s.get_value('height'))
-    #     with self.condition:
-    #         self.gstbuffer = sample.get_buffer()
-    #         self.condition.notify_all()
-    #     return Gst.FlowReturn.OK
+    def on_new_sample(self, sink):
+        sample = sink.emit('pull-sample')
+        if not self.sink_size:
+            s = sample.get_caps().get_structure(0)
+            self.sink_size = (s.get_value('width'), s.get_value('height'))
+        with self.condition:
+            self.gstbuffer = sample.get_buffer()
+            self.condition.notify_all()
+        return Gst.FlowReturn.OK
 
     def get_box(self):
         if not self.box:
